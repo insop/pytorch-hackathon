@@ -138,6 +138,7 @@ def transcribe(waveform, args, task, generator, models, sp, tgt_dict):
     print('transcription:', transcription)
     return transcription
 
+
 def main(args):
     check_args(args)
     import_user_module(args)
@@ -201,6 +202,7 @@ def cli_main():
     parser = add_asr_eval_argument(parser)
     #args = fairspeq_options.parse_args_and_arch(parser)
     args = options.parse_args_and_arch(parser)
+    print(args)
     main(args)
 
 
