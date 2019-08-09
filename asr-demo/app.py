@@ -15,6 +15,10 @@ from fairseq import options, progress_bar, utils, tasks
 from fairseq.meters import StopwatchMeter, TimeMeter
 from fairseq.utils import import_user_module
 
+#from fastai.vision import *
+
+import utils
+
 app = Flask(__name__)
 
 import argparse
@@ -97,6 +101,8 @@ def model_load_classes(args):
     XXX TODO
     load model for classes classificaiton
     """
+    learn = cnn_learner(data, models.resnet50, metrics=error_rate)
+    
     pass
 
 
@@ -205,6 +211,10 @@ def infer_classes_by_short_image(wav_fname, png_fname):
     
 
 def test_convert_audio_image(wav_fname):
+    """
+    test code
+    """
+  
     filename, file_extension = os.path.splitext(wav_fname)
     
     TEST_NFILE = 4
@@ -231,6 +241,11 @@ models_asr, sp, generator = load_model_asr(args)
 
 # model for classifying types, speech or classes
 models_class = model_load_classes(args)
+
+MODEL_CLASSES_PATH = '../../audio_classification/data/mixed/models/stage-2-unfrozen.pth'
+
+# XXX
+# model_classes = load_learner(MODEL_CLASSES_PATH)
 
 # 3. Define a route for inference, asr only
 @app.route('/transcribe_asr', methods=['POST'])
