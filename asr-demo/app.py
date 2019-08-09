@@ -19,7 +19,10 @@ app = Flask(__name__)
 
 import argparse
 
+# import utils
+
 # manually preparing argument
+
 """
 Complete list of arguments for fairseq is as follows:
 
@@ -39,6 +42,7 @@ ates=0, weight_decay=0.0, wfstlm=None)
 ```
 
 """
+
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--max-tokens', type=int, default=10000000)
 parser.add_argument('--nbest', type=int, default=1)
@@ -59,7 +63,7 @@ print("ARGS:", args)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-def optimize_models(args, models):
+def optimize_models_asr(args, models):
     """Optimize ensemble for generation
     """
     for model in models:
@@ -70,16 +74,15 @@ def optimize_models(args, models):
 
     model.to(dev)
 
-#def model_load(path, no_beamable_mm, beam, print_alignment, model_overrides):
-def model_load(args):
+def load_model_asr(args):
     # Load ensemble
     logger.info("| loading model(s) from {}".format(args.path))
-    models, _model_args = utils.load_ensemble_for_inference(
+    models_asr, _model_args = utils.load_ensemble_for_inference(
         args.path.split(":"),
         task,
         model_arg_overrides={}
     )
-    optimize_models(args, models)
+    optimize_models_asr(args, models_asr)
 
     # Initialize generator
     generator = task.build_generator(args)
@@ -87,16 +90,17 @@ def model_load(args):
     sp = spm.SentencePieceProcessor()
     sp.Load(os.path.join(args.data, 'spm.model'))
     
-    return models, sp, generator
+    return models_asr, sp, generator
 
-dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+def model_load_classes(args):
+    """
+    XXX TODO
+    load model for classes classificaiton
+    """
+    pass
 
-# Load dataset splits
-task = tasks.setup_task(args)
-    
-models, sp, generator = model_load(args)
 
-def process_predictions(args, hypos, sp, tgt_dict):
+def process_predictions_asr(args, hypos, sp, tgt_dict):
     res = []
     for hypo in hypos[: min(len(hypos), args.nbest)]:
         hyp_pieces = tgt_dict.string(hypo["tokens"].int().cpu())
@@ -120,7 +124,7 @@ def calcMN(features):
     res = (features - mean) * invstddev
     return res
 
-def transcribe(waveform, args, task, generator, models, sp, tgt_dict):
+def transcribe_asr(waveform, args, task, generator, models, sp, tgt_dict):
     r"""
     CUDA_VISIBLE_DEVICES=0 python infer_asr.py /Users/jamarshon/Documents/downloads/ \
         --task speech_recognition --max-tokens 10000000 --nbest 1 --path \
@@ -146,15 +150,16 @@ def transcribe(waveform, args, task, generator, models, sp, tgt_dict):
     print(hypos)
     for i in range(len(hypos)):
         # Process top predictions
-        hyp_words = process_predictions(args, hypos[i], sp, tgt_dict)
+        hyp_words = process_predictions_asr(args, hypos[i], sp, tgt_dict)
         transcription.append(hyp_words)
 
     print('transcription:', transcription)
     return transcription
 
+
     
 # 2. Write a function for inference - wav file
-def infer(wav_file):
+def infer_asr(wav_file):
     waveform, sample_rate = torchaudio.load_wav(wav_file)
     waveform = waveform.mean(0, True)
     waveform = torchaudio.transforms.Resample(orig_freq=sample_rate,new_freq=16000)(waveform)
@@ -163,15 +168,73 @@ def infer(wav_file):
     print(sample_rate, waveform.shape)
     start = time.time()
     tgt_dict = task.target_dictionary
-    transcription = transcribe(waveform, args, task, generator, models, sp, tgt_dict)
+    transcription = transcribe_asr(waveform, args, task, generator, models_asr, sp, tgt_dict)
     end = time.time()
     print(end - start)
     return transcription
     
     
-# 3. Define a route for inference
-@app.route('/transcribe', methods=['POST'])
-def transcribe_route():
+def infer_classes(audio_img_file):
+    """
+    XXX TODO
+    predict classes (background audio type or speech)
+    
+    """
+    # 1 as speech
+    return 1
+
+
+def infer_classes_by_short_image(wav_fname, png_fname):
+    """
+    """
+    # decide pipeline
+    
+    speech_or_classes = infer_classes(png_fname)
+    
+    # feed corresponding network
+
+    # TODO speech class id
+    if speech_or_classes == 1:
+        print("speech")
+        transcription = infer_asr(wav_fname)
+    else:
+        print("background", speech_or_classes)
+    
+    # convert the result
+    return transcription
+    
+
+def test_convert_audio_image(wav_fname):
+    filename, file_extension = os.path.splitext(wav_fname)
+    
+    TEST_NFILE = 4
+    fnames = []
+    
+    for i in range(TEST_NFILE):
+        (_wav_fname, png_fname) = filename + "_"+str(i) + ".wav", filename + "_"+ str(i) + ".png"
+        fnames.append((_wav_fname, png_fname))
+        from shutil import copyfile
+        # dummy copy for testing
+        copyfile(wav_fname, _wav_fname)
+    
+    return fnames
+        
+    
+    
+dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+# Load dataset splits
+task = tasks.setup_task(args)
+    
+# model for asr
+models_asr, sp, generator = load_model_asr(args)
+
+# model for classifying types, speech or classes
+models_class = model_load_classes(args)
+
+# 3. Define a route for inference, asr only
+@app.route('/transcribe_asr', methods=['POST'])
+def transcribe_asr_route():
     # Get the file out from the request
     print(request.files)
     print('wav_file', request.files['audio'])
@@ -179,7 +242,7 @@ def transcribe_route():
     wav_file_name = './tmp/' + wav_file.filename
     wav_file.save(wav_file_name)
     print("wav_file_name", wav_file_name)
-    transcription = infer(wav_file_name)
+    transcription = infer_asr(wav_file_name)
     print("translated transcript>>", transcription)
 
     # Do the inference, get the result
@@ -188,14 +251,28 @@ def transcribe_route():
     return json.dumps({'success': True, 'transcription': transcription[0][0]})
 
 
+# 4. Define a route for inference, mixed
+@app.route('/transcribe', methods=['POST'])
+def transcribe_route():
+    # Get the file out from the request
+    print(request.files)
+    print('wav_file', request.files['audio'])
+    wav_file = request.files['audio']
+    wav_file_name = './tmp/' + wav_file.filename
+    wav_file.save(wav_file_name)
+    
+    short_wav_png_fnames = test_convert_audio_image(wav_file_name)
+    print(short_wav_png_fnames)
+    
+    result = [infer_classes_by_short_image(png_fname, wav_fname) for (png_fname, wav_fname) in short_wav_png_fnames]
+    
+    return json.dumps({'success': True, 'transcription': result})
 
 @app.route('/')
 def hello_world():
         return 'Hello, World!'
 
 if __name__ == '__main__':
-    #model_path = ''
-    #model_load(model_path)
 
     app.run(host='0.0.0.0', port=8090)
     
