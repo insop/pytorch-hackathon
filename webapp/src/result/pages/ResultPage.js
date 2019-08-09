@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import AudioPlayer from "../components/AudioPlayer";
+import AudioPlayer from "../../home/components/AudioPlayer";
 import CrossfadeImage from "../components/CrossfadeImage";
 import { Container } from "react-bootstrap";
 
