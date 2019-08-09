@@ -80,6 +80,14 @@ class UploadButton extends Component {
           </div>
           <div>Upload</div>
         </Button>
+        <img
+          src="https://i.imgur.com/NFS20Om.png"
+          style={{ marginTop: 72, height: 200, width: 200 }}
+          alt=""
+        />
+        <div style={{ fontSize: 12 }}>
+          Please enable "Insecure scripts" as our REST API is on HTTP.
+        </div>
       </>
     );
   }
