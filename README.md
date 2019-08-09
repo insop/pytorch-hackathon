@@ -28,3 +28,4 @@ We prepared a web service using Flask and Rest API, that completes our project p
 ## 5. External Software
 - Pytorch Fairseq: https://github.com/pytorch/fairseq
 - Pytorch Audio: https://github.com/pytorch/audio
+- Fastai: https://github.com/fastai
