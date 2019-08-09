@@ -28,7 +28,7 @@ ASR Demo
 
 Make a directory: 
 
-
+```
 git clone asr-dmo
 conda create -n asr-demo python=3.7
 conda activate air-demo
@@ -48,22 +48,28 @@ wget https://download.pytorch.org/models/audio/dict.txt
 wget https://download.pytorch.org/models/audio/spm.model
 wget https://download.pytorch.org/models/audio/checkpoint_avg_60_80.pt 
 cd ..
+```
 
-# Get the inference file
+Get the inference file
+```
 wget https://gist.githubusercontent.com/aakashns/2b696fe4b03f37a9d7f57cfd06cb7e5b/raw/573d250c51999e9d2d35dbd039b59dc1d7407806/infer_file.py
-
-# Download a wav file to data
+```
+Download a wav file to data
+```
 cd data
 // wget a .wav file
+```
 
-# Set the path in file
+Set the path in file
+```
 // edit infer_file.py to set path
 // set use_cuda to false
+```
 
+Final inference 
 
-# Final inference 
-
+```
 python infer_file.py ./data --max-tokens 10000000 --nbest 1 --path ./data/checkpoint_avg_60_80.pt --beam 40 --task speech_recognition --user-dir ../fairseq/examples/speech_recognition
-
+```
 
 
