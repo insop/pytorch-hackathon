@@ -16,9 +16,11 @@ class Gif extends PureComponent {
 const Transcription = ({ children }) => (
   <div
     style={{
-      marginTop: 16,
+      marginTop: 64,
       fontFamily: "Georgia",
-      fontStyle: "italic"
+      fontStyle: "italic",
+      fontSize: 20,
+      textAlign: "center"
     }}
   >
     <div>{children}</div>
@@ -98,7 +100,6 @@ export default class ShowResult extends Component {
         </div>
 
         {this.renderText()}
-        <div style={{ height: 64 }} />
         {this.renderGif()}
       </div>
     );
