@@ -12,8 +12,23 @@ from .fairseq_task import FairseqTask
 TASK_REGISTRY = {}
 TASK_CLASS_NAMES = set()
 
+import sys
+
+def import_user_module(module_path):
+    # module_path = getattr(args, 'user_dir', None)
+    print("user_dir", module_path)
+    if module_path is not None:
+        module_path = os.path.abspath(module_path)
+        module_parent, module_name = os.path.split(module_path)
+
+        if module_name not in sys.modules:
+            sys.path.insert(0, module_parent)
+            importlib.import_module(module_name)
+            sys.path.pop(0)
 
 def setup_task(args, **kwargs):
+    import_user_module('/home/aakashns/SPEECH_RECOGNITION/fairseq/examples/speech_recognition')
+    print("task_registry", TASK_REGISTRY)
     return TASK_REGISTRY[args.task].setup_task(args, **kwargs)
 
 
