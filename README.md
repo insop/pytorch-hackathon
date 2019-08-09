@@ -1,7 +1,7 @@
 # Pytorch-Hackathon
 ## Audimext: An approach to aid hearing impaired people
 
-Team Members: Aakash NS, Insop Song, Himashu, Viraj, Paridhi Singh
+Team Members: Aakash NS, Insop Song, Himanshu Raj, Viraj Deshwal, Paridhi Singh
 
 ## 1. Introduction
 
