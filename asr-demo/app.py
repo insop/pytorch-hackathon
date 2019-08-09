@@ -215,10 +215,11 @@ def infer_classes_by_short_image(wav_fname, png_fname):
     # feed corresponding network
 
     SPEECH_CLASS = 9
+    CHILDREN_CLASS = 2
 
     speech_or_classes_item = speech_or_classes[1].item()
 
-    if speech_or_classes_item == SPEECH_CLASS:
+    if speech_or_classes_item == SPEECH_CLASS or speech_or_classes_item == CHILDREN_CLASS:
         print("speech")
         result = {'cls': 'speech', 'transcription': infer_asr(wav_fname)}
     else:
@@ -279,7 +280,7 @@ def transcribe_asr_route():
     # Do the inference, get the result
 
     # Return json
-    return json.dumps({'success': True, 'transcription': transcription[0][0]})
+    return jsonify({'success': True, 'transcription': transcription[0][0]})
 
 
 # 4. Define a route for inference, mixed
