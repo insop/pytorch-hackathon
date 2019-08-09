@@ -19,3 +19,9 @@ Example command:
 Save the dictionary, sentence piece model and model in data
 
 python interactive_asr.py ./data --max-tokens 10000000 --nbest 1 --path ./data/model.pt --beam 40 --task speech_recognition --user-dir ../fairseq/examples/speech_recognition
+
+File based inference:
+```
+python infer_file.py ./data --max-tokens 10000000 --nbest 1 --path ./data/checkpoint_avg_60_80.pt --beam 40 --task s
+peech_recognition --user-dir ../fairseq/examples/speech_recognition
+```
