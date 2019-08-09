@@ -45,6 +45,7 @@ pip install sentencepiece
 cd ..
 git clone https://github.com/pytorch/fairseq
 cd fairseq
+export CFLAGS='-stdlib=libc++'
 pip install --editable .
 
 cd ../asr-demo
