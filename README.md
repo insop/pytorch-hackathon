@@ -19,7 +19,7 @@ We created a hybrid model which takes input in any wav form and gives the output
 
 1. ResNet50: Our input data, in the .wav form is initially fed into the ResNet50 model to help us segregate the 10 different background classes with 1 foreground (speech) class. 
 
-2. Transformer based ASR (FairSeq): We feed the output from the ResNet50 model if foreground class is detected, to the Transformer based ASR to convert speech to text.
+2. Transformer based ASR (FairSeq): We feed the output from the ResNet50 model if foreground class is detected, to the Transformer based ASR to convert speech to text.  (https://arxiv.org/abs/1904.11660)
 
 ## 4. APIs
 We prepared a web service using Flask and Rest API, that completes our project pipeline by stiching the networks, feeding them with the desired inputs and collect the outputs to present them in the respective visual formats. Our User Interface gives the user flexibility to click and play. 
