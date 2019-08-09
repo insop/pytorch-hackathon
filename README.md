@@ -23,3 +23,8 @@ We created a hybrid model which takes input in any wav form and gives the output
 
 ## 4. APIs
 We prepared a web service using Flask and Rest API, that completes our project pipeline by stiching the networks, feeding them with the desired inputs and collect the outputs to present them in the respective visual formats. Our User Interface gives the user flexibility to click and play. 
+
+
+## 5. External Software
+- Pytorch Fairseq: https://github.com/pytorch/fairseq
+- Pytorch Audio: https://github.com/pytorch/audio
