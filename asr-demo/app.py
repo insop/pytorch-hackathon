@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 
 import logging
@@ -15,9 +15,9 @@ from fairseq import options, progress_bar, utils, tasks
 from fairseq.meters import StopwatchMeter, TimeMeter
 from fairseq.utils import import_user_module
 
-#from fastai.vision import *
+from fastai.basic_train import load_learner
 
-import utils
+import utils as ourutils
 
 app = Flask(__name__)
 
@@ -46,6 +46,14 @@ ates=0, weight_decay=0.0, wfstlm=None)
 ```
 
 """
+
+
+# fix torch for fastai
+def gesv(b, A, out=None):
+    return torch.solve(b, A, out=out)
+
+torch.gesv = gesv
+
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--max-tokens', type=int, default=10000000)
@@ -95,15 +103,6 @@ def load_model_asr(args):
     sp.Load(os.path.join(args.data, 'spm.model'))
     
     return models_asr, sp, generator
-
-def model_load_classes(args):
-    """
-    XXX TODO
-    load model for classes classificaiton
-    """
-    learn = cnn_learner(data, models.resnet50, metrics=error_rate)
-    
-    pass
 
 
 def process_predictions_asr(args, hypos, sp, tgt_dict):
@@ -180,15 +179,30 @@ def infer_asr(wav_file):
     return transcription
     
     
-def infer_classes(audio_img_file):
+def infer_classes(png_fname):
     """
     XXX TODO
     predict classes (background audio type or speech)
     
     """
     # 1 as speech
-    return 1
+    
+    from fastai.vision.image import open_image
+    classes = model_classes.predict(open_image(png_fname))
 
+    return classes
+
+CLASS_LABELS = ['air_conditioner',
+ 'car_horn',
+ 'children_playing',
+ 'dog_bark',
+ 'drilling',
+ 'engine_idling',
+ 'gun_shot',
+ 'jackhammer',
+ 'siren',
+ 'speech',
+ 'street_music']
 
 def infer_classes_by_short_image(wav_fname, png_fname):
     """
@@ -196,18 +210,23 @@ def infer_classes_by_short_image(wav_fname, png_fname):
     # decide pipeline
     
     speech_or_classes = infer_classes(png_fname)
+    print("infer_classes_by_short_image", speech_or_classes)
     
     # feed corresponding network
 
-    # TODO speech class id
-    if speech_or_classes == 1:
+    SPEECH_CLASS = 9
+
+    speech_or_classes_item = speech_or_classes[1].item()
+
+    if speech_or_classes_item == SPEECH_CLASS:
         print("speech")
-        transcription = infer_asr(wav_fname)
+        result = {'cls': 'speech', 'transcription': infer_asr(wav_fname)}
     else:
         print("background", speech_or_classes)
+        result = {'cls': CLASS_LABELS[speech_or_classes_item], 'transcription': ''}
     
     # convert the result
-    return transcription
+    return result
     
 
 def test_convert_audio_image(wav_fname):
@@ -239,13 +258,10 @@ task = tasks.setup_task(args)
 # model for asr
 models_asr, sp, generator = load_model_asr(args)
 
+MODEL_CLASSES_PATH = '../../audio_classification/data/mixed/'
+
 # model for classifying types, speech or classes
-models_class = model_load_classes(args)
-
-MODEL_CLASSES_PATH = '../../audio_classification/data/mixed/models/stage-2-unfrozen.pth'
-
-# XXX
-# model_classes = load_learner(MODEL_CLASSES_PATH)
+model_classes = load_learner(MODEL_CLASSES_PATH)
 
 # 3. Define a route for inference, asr only
 @app.route('/transcribe_asr', methods=['POST'])
@@ -276,12 +292,14 @@ def transcribe_route():
     wav_file_name = './tmp/' + wav_file.filename
     wav_file.save(wav_file_name)
     
-    short_wav_png_fnames = test_convert_audio_image(wav_file_name)
+    #short_wav_png_fnames = test_convert_audio_image(wav_file_name)
+    short_wav_png_fnames = ourutils.convert_audio_image(wav_file_name)
     print(short_wav_png_fnames)
     
-    result = [infer_classes_by_short_image(png_fname, wav_fname) for (png_fname, wav_fname) in short_wav_png_fnames]
+    results = [infer_classes_by_short_image(png_fname, wav_fname) for (png_fname, wav_fname) in short_wav_png_fnames]
     
-    return json.dumps({'success': True, 'transcription': result})
+    return jsonify({'success': True, 'result': results})
+
 
 @app.route('/')
 def hello_world():
